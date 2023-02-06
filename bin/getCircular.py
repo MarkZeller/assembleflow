@@ -33,3 +33,4 @@ if __name__ == '__main__':
     with open(args.input) as filein, open(args.output, 'a') as fileout:
         num_circular = find_circular_scaffolds(filein,fileout,int(args.kmer),int(args.min_len))
         print("Found " + str(num_circular) + " circular contigs.")
+
