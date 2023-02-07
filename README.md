@@ -11,7 +11,8 @@ Assembleflow is a metagenomics sequencing assembly pipeline for Illumina paired-
 
 ### Requirements
 * Linux or MacOS
-* Docker
+* Diamond
+* KronaTools
 
 ## Installing
 
