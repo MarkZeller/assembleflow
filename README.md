@@ -1,6 +1,6 @@
-# assembleflow
+# Assembleflow
 
-Assembleflow is a metagenomics sequencing assembly pipeline for Illumina paired-end reads. It will generate assemblies and assign a taxonomic rank to each contig. 
+Assembleflow is a metagenomics sequencing assembly pipeline for Illumina paired-end reads. It will assemble reads into contigs and assigns a taxonomic rank to each contig. 
 
 ## Table of Contents
 * [Requirements](#requirements)
