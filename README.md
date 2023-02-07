@@ -26,7 +26,7 @@ The entire workflow has been implemented in NextFlow. An overview of each step i
 	+ Adapter trimming
 * Assembly
 	+ Assemble reads into contigs
-	+ Align reads to contigs
+	+ Align reads back to contigs
 	+ Find circular contigs
 * Assign taxonomy
 	+ Assign taxonomy to contigs
@@ -34,15 +34,15 @@ The entire workflow has been implemented in NextFlow. An overview of each step i
 
 
 ### Usage
-Assembleflow uses the nextflow.config file to provide parameters to the pipeline. To run the pipeline simply upodate the nextflow.config file:
+Assembleflow uses the `nextflow.config` file to provide parameters to the pipeline. To run the pipeline simply upodate the `nextflow.config` file:
 Areas to configure: 
-* reads = folder containing the paired-end reads
-* adapt = location of the file that contains the adapter sequences in fasta format
-* db = location of the database used by Diamond
-* scaf_len = contig length filter (reads below this length will be ignored when assigning taxonomy)
-* outdir = output directory
+* reads: folder containing the paired-end reads
+* adapt: location of the file that contains the adapter sequences in fasta format
+* db: location of the database used by Diamond
+* scaf_len: contig length filter (reads below this length will be ignored when assigning taxonomy)
+* outdir: output directory
 
 
 ### Running
 Once your workflow.sh has been configured you can start the workflow by simply running:
-'nextflow run main.nf'
+`nextflow run main.nf`
