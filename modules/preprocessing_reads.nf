@@ -1,30 +1,10 @@
 /*
- * Remove optical duplicates from paired-end sequence data
- */ 
-
-process DEDUPLICATE {
-    container 'staphb/bbtools:39.01'
-    tag { sample_id }
-
-    input:
-    tuple val(sample_id), path(reads)
-
-    output:
-    tuple val(sample_id), path('*_deduplicated.fastq.gz')
-
-    script:
-
-    """
-    clumpify.sh in1=${reads[0]} in2=${reads[1]} out1=${sample_id}_R1_deduplicated.fastq.gz out2=${sample_id}_R2_deduplicated.fastq.gz dedupe subs=0 reorder threads=$params.cpus
-    """
-}
-
-/*
  * Merge overlapping paired-end reads
  */ 
 
 process MERGE {
-    container 'staphb/bbtools:39.01'
+    publishDir "${params.outdir}/merged_reads/", mode: 'copy', pattern: "${sample_id}_*merged.fastq.gz"
+    container 'staphb/flash:latest'
     tag { sample_id }
 
     input:
@@ -36,7 +16,13 @@ process MERGE {
     script:
 
     """
-    bbmerge.sh in1=${reads[0]} in2=${reads[1]} out=${sample_id}_merged.fastq.gz outu1=${sample_id}_R1_unmerged.fastq.gz outu2=${sample_id}_R2_unmerged.fastq.gz vstrict threads=$params.cpus
+    read_length=\$(zcat ${reads[0]} | awk 'NR==2 {print length(\$0)}')
+
+    flash ${reads[0]} ${reads[1]} -o ${sample_id} --output-prefix=${sample_id} -z -m 10 -M \$read_length -x 0.1
+
+    mv ${sample_id}.notCombined_1.fastq.gz ${sample_id}_R1_unmerged.fastq.gz 
+    mv ${sample_id}.notCombined_2.fastq.gz ${sample_id}_R2_unmerged.fastq.gz 
+    mv ${sample_id}.extendedFrags.fastq.gz ${sample_id}_merged.fastq.gz
 
     """
 }
@@ -47,7 +33,7 @@ process MERGE {
 
 process TRIM {
     publishDir "${params.outdir}/trimmed_reads/", mode: 'copy', pattern: "${sample_id}_*merged_trimmed.fastq.gz"
-    container 'staphb/bbtools:39.01'
+    container 'staphb/fastp:latest'
     tag { sample_id }
 
     input:
@@ -59,8 +45,10 @@ process TRIM {
     script:
 
     """
-    bbduk.sh in1=${unmerged_reads[0]} in2=${unmerged_reads[1]} out1=${sample_id}_R1_unmerged_trimmed.fastq.gz out2=${sample_id}_R2_unmerged_trimmed.fastq.gz ref=${adapt} ktrim=r k=23 mink=4 hdist=1 minlength=50 qtrim=w trimq=20 tpe tbo threads=${params.cpus}
-    bbduk.sh in=${merged_reads} out=${sample_id}_merged_trimmed.fastq.gz ref=${adapt} ktrim=r k=23 mink=4 hdist=1 minlength=50 qtrim=w trimq=20 tpe tbo threads=${params.cpus}
+    # Unmerged reads trimming
+    fastp --in1=${unmerged_reads[0]} --in2=${unmerged_reads[1]} --out1=${sample_id}_R1_unmerged_trimmed.fastq.gz --out2=${sample_id}_R2_unmerged_trimmed.fastq.gz --adapter_fasta=${adapt} --length_required 50 --cut_right --cut_window_size 4 --cut_mean_quality 20 --qualified_quality_phred 20 --thread=${params.cpus} 
 
+    # Merged reads trimming
+    fastp --in1=${merged_reads} --out1=${sample_id}_merged_trimmed.fastq.gz --adapter_fasta=${adapt} --length_required 50 --cut_right --cut_window_size 4 --cut_mean_quality 20 --qualified_quality_phred 20 --thread=${params.cpus}
     """
 }
