@@ -52,7 +52,6 @@ process ALIGN {
     publishDir "${params.outdir}/alignments/", mode: 'copy'
 
     container 'staphb/bwa'
-    containerOptions '--platform linux/amd64'
     tag { sample_id }
 
     input:
@@ -77,7 +76,6 @@ process SAMTOOLS {
     publishDir "${params.outdir}/alignments/", mode: 'copy', pattern: "${sample_id}.{bam,bam.bai}"
 
     container 'staphb/samtools'
-    containerOptions '--platform linux/amd64'
     tag { sample_id }
 
     input:
