@@ -19,78 +19,33 @@ process DIAMOND {
 
     """
     filter_sequences_by_length.sh -i ${assembly} -s ${params.scaf_len} -o ${sample_id}_scaffolds_${params.scaf_len}.fasta 
-    diamond blastx -d ${diamond_db} -q ${sample_id}_scaffolds_${params.scaf_len}.fasta  -o ${sample_id}.out -p ${params.cpus} -f 6 --top 10 -e 10 -b 6 --more-sensitive --matrix BLOSUM45 --comp-based-stats 1 
-
+    diamond blastx -d ${diamond_db} -q ${sample_id}_scaffolds_${params.scaf_len}.fasta  -o ${sample_id}.out -p ${params.cpus} --outfmt 6 qseqid sseqid staxids pident length mismatch gapopen evalue bitscore --top 10 -e 10 -b 6 --more-sensitive --matrix BLOSUM45 --comp-based-stats 1 
     """
 }
 
-/*
- * Obtain the lowest common ancestor from top blast hits
- */ 
-
-process LCA {
-    publishDir "${params.outdir}/krona/", mode: 'copy', pattern: "${sample_id}.html"
-    container 'nanozoo/krona:2.7.1--e7615f7'
-    tag { sample_id }
-
-    input:
-    tuple val(sample_id), path(diamond_output), path(magnitudes),path(krona_db)
-
-    output:
-    tuple val(sample_id), path("${sample_id}.csv"), emit: magnitudes
-    tuple val(sample_id), path("${sample_id}.html"), emit: krona
-
-    script:
-
-    """
-    ktImportBLAST ${diamond_output} ${diamond_output}:${magnitudes} -o ${sample_id}.html -tax ${krona_db}
-    ktClassifyBLAST -t 50 -p -o ${sample_id}.tsv ${diamond_output} -tax ${krona_db}
-    mergeMagnitudes.py -l ${sample_id}.tsv -m ${magnitudes} -o ${sample_id}.csv
-
-    """
-}
 
 /*
- * Fill in parental nodes in the taxonomy tree for each sequence
+ * Obtain lowest common ancestor from blast hits and taxonomy information for hits and LCAs
  */ 
 
 process TAXONOMY {
-    publishDir "${params.outdir}/taxonomy/", mode: 'copy', pattern: "${sample_id}_taxonomy.csv"
+    publishDir "${params.outdir}/taxonomy/", mode: 'copy', pattern: "*.csv"
     tag { sample_id }
 
     input:
-    tuple val(sample_id), path(lca_magnitudes)
+    tuple val(sample_id), path(diamond_out), path(magnitudes)
 
     output:
-    tuple val(sample_id), path("${sample_id}_taxonomy.csv")
+    tuple val(sample_id), path("${sample_id}_table.csv"), emit: table
+    tuple val(sample_id), path("${sample_id}_lca_summary.csv"), emit: lca_summary
+    tuple val(sample_id), path("${sample_id}_hits_summary.csv"), emit: hits_summary
+    tuple val(sample_id), path("${sample_id}_virus_hits_summary.csv"), optional: true, emit: virus_hits_summary
 
     
     script:
 
     """
-    getTaxonomy.py -i ${lca_magnitudes} -o ${sample_id}_taxonomy.csv
-
-    """
-}
-
-/*
- * Summarize based on taxonomic level
- */ 
-
-process SUMMARIZE {
-    publishDir "${params.outdir}/taxonomy_summary/", mode: 'copy', pattern: "*.csv"
-    tag { sample_id }
-
-    input:
-    tuple val(sample_id), path(taxonomy)
-
-    output:
-    path "*.csv"
-
-    script:
-
-    """
-    summarizeTaxonomy.py -i ${taxonomy} -s ${sample_id}
+    taxonomyOut.py -i ${diamond_out} -m ${magnitudes} -o ${sample_id}_table.csv -l ${sample_id}_lca_summary.csv -s ${sample_id}_hits_summary.csv -v ${sample_id}_virus_hits_summary.csv
 
     """
 }
