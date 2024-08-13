@@ -9,25 +9,13 @@ ncbi=NCBITaxa()
 #function which gets lowest common ancestor for a list of target accession IDs
 def get_lca(tax_ids):
 	try:
+		tax_ids=[int(float(tax_id)) for tax_id in tax_ids if pd.notna(tax_id)]
 
-		valid_tax_ids=[]
-		for ids in tax_ids:
-			if pd.notna(ids):
-				try:
-					valid_tax_ids.append(str(int(float(ids))))
-				except ValueError:
-					print(f"Invalid taxonomy ID: {ids}")
-		if not valid_tax_ids:
-			print("No valid taxonomy IDs found")
-			return None
-
-		tree=ncbi.get_topology(tax_ids)
-		lca=tree.get_common_ancestor(tax_ids)
+		lca=ncbi.get_topology(tax_ids, intermediate_nodes=False)
 		
 		if lca:
 			return lca.taxid
 		else:
-			print("No LCA found")
 			return None 
 	except Exception as e:
 		print(f"Error finding LCA: {e}")
@@ -35,35 +23,40 @@ def get_lca(tax_ids):
 
 
 def translate_taxid(taxid):
-	taxid=str(int(float(taxid)))
-	lineage=ncbi.get_lineage(taxid)
-	lineage_names=ncbi.get_taxid_translator(lineage)
-	rank_levels=ncbi.get_rank(lineage)
+	try:
+		
+		taxid=str(int(float(taxid)))
+		lineage=ncbi.get_lineage(taxid)
+		lineage_names=ncbi.get_taxid_translator(lineage)
+		rank_levels=ncbi.get_rank(lineage)
 
-	root=cellular_organisms=superkingdom=phylum=class_=family=superfamily=genus=species="NA"
+		root=cellular_organisms=superkingdom=phylum=class_=family=superfamily=genus=species="NA"
 
-	for tax in lineage:
-		rank=rank_levels.get(tax, "NA")
-		if tax==1:
-			root=lineage_names.get(tax, "root")
-		elif tax==131567:
-			cellular_organisms=lineage_names.get(tax, "cellular organisms")
-		elif rank=="superkingdom":
-			superkingdom=lineage_names.get(tax, "NA")
-		elif rank=="phylum":
-			phylum=lineage_names.get(tax, "NA")
-		elif rank=="class":
-			class_=lineage_names.get(tax, "NA")
-		elif rank=="superfamily":
-			superfamily=lineage_names.get(tax, "NA")
-		elif rank=="family":
-			family=lineage_names.get(tax, "NA")
-		elif rank=="genus":
-			genus=lineage_names.get(tax, "NA")
-		elif rank=="species":
-			species=lineage_names.get(tax, "NA")
+		for tax in lineage:
+			rank=rank_levels.get(tax, "NA")
+			if tax==1:
+				root=lineage_names.get(tax, "root")
+			elif tax==131567:
+				cellular_organisms=lineage_names.get(tax, "cellular organisms")
+			elif rank=="superkingdom":
+				superkingdom=lineage_names.get(tax, "NA")
+			elif rank=="phylum":
+				phylum=lineage_names.get(tax, "NA")
+			elif rank=="class":
+				class_=lineage_names.get(tax, "NA")
+			elif rank=="superfamily":
+				superfamily=lineage_names.get(tax, "NA")
+			elif rank=="family":
+				family=lineage_names.get(tax, "NA")
+			elif rank=="genus":
+				genus=lineage_names.get(tax, "NA")
+			elif rank=="species":
+				species=lineage_names.get(tax, "NA")
 
-	return root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species
+		return root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species
+	except Exception as e:
+		print(f"Error translating taxid {taxid}: {e}")
+		return "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"
 
 def parse_tax_info(taxonomy_info):
 	ranks=['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']
