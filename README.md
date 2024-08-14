@@ -15,7 +15,10 @@ Assembleflow is a metagenomics sequencing assembly pipeline for Illumina paired-
 * KronaTools
 
 ## Installing
-
+Assembleflow requires a Diamond database. Run the following script to build a protein refseq Diamond database:
+```sh
+bash ./scripts/download_and_build_diamond_db_with_taxonomy.sh
+```
 
 ### Contents
 
