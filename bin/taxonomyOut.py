@@ -69,7 +69,7 @@ def parse_tax_info(taxonomy_info):
 	return dict(zip(ranks, taxa))
 
 def process_hits(hit):
-	root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(tax_id)
+	root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(hit)
 	return {
 		'Root': root,
 		'Cellular Organisms': cellular_organisms,
@@ -83,8 +83,8 @@ def process_hits(hit):
 	}
 
 def process_virus_hits(hit):
-		root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(tax_id)
-	return {
+	root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(hit)
+	hit_dict= {
 		'Root': root,
 		'Cellular Organisms': cellular_organisms,
 		'Superkingdom': superkingdom,
@@ -96,7 +96,7 @@ def process_virus_hits(hit):
 		'Species': species
 	}
 
-	if hit_dict['Superkingdom']=="Viruses":
+	if superkingdom=="Viruses":
 		hit_dict['Count']=1
 		return hit_dict
 	else:
