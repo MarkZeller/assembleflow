@@ -28,30 +28,35 @@ def translate_taxid(taxid):
 		taxid=str(int(float(taxid)))
 		lineage=ncbi.get_lineage(taxid)
 		lineage_names=ncbi.get_taxid_translator(lineage)
-		rank_levels=ncbi.get_rank(lineage)
+		translated_names=[lineage_names.get(taxid, "Unknown") for taxid in lineage]
+		ranks=ncbi.get_rank(lineage)
+		rank_names=[ranks.get(taxid, "Unknown") for taxid in lineage]
 
 		root=cellular_organisms=superkingdom=phylum=class_=family=superfamily=genus=species="NA"
 
+		rank_dict=dict(zip(lineage, rank_names))
+		name_dict=dict(zip(lineage, translated_names))
+
 		for tax in lineage:
-			rank=rank_levels.get(tax, "NA")
+			rank=rank_dict.get(tax, "NA")
 			if tax==1:
-				root=lineage_names.get(tax, "root")
+				root=name_dict.get(tax, "root")
 			elif tax==131567:
-				cellular_organisms=lineage_names.get(tax, "cellular organisms")
+				cellular_organisms=name_dict.get(tax, "cellular organisms")
 			elif rank=="superkingdom":
-				superkingdom=lineage_names.get(tax, "NA")
+				superkingdom=name_dict.get(tax, "NA")
 			elif rank=="phylum":
-				phylum=lineage_names.get(tax, "NA")
+				phylum=name_dict.get(tax, "NA")
 			elif rank=="class":
-				class_=lineage_names.get(tax, "NA")
+				class_=name_dict.get(tax, "NA")
 			elif rank=="superfamily":
-				superfamily=lineage_names.get(tax, "NA")
+				superfamily=name_dict.get(tax, "NA")
 			elif rank=="family":
-				family=lineage_names.get(tax, "NA")
+				family=name_dict.get(tax, "NA")
 			elif rank=="genus":
-				genus=lineage_names.get(tax, "NA")
+				genus=name_dict.get(tax, "NA")
 			elif rank=="species":
-				species=lineage_names.get(tax, "NA")
+				species=name_dict.get(tax, "NA")
 
 		return root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species
 	except Exception as e:
@@ -63,15 +68,33 @@ def parse_tax_info(taxonomy_info):
 	taxa=taxonomy_info.split(', ')
 	return dict(zip(ranks, taxa))
 
-def process_hits(hit, taxonomy_info):
-	ranks=['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']
-	taxa=taxonomy_info.split(', ')
-	return dict(zip(ranks, taxa + ['NA']*(len(ranks) - len(taxa))))
+def process_hits(hit):
+	root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(tax_id)
+	return {
+		'Root': root,
+		'Cellular Organisms': cellular_organisms,
+		'Superkingdom': superkingdom,
+		'Phylum': phylum,
+		'Class': class_,
+		'Superfamily': superfamily,
+		'Family': family,
+		'Genus': genus,
+		'Species': species
+	}
 
-def process_virus_hits(hit, taxonomy_info):
-	ranks=['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']
-	taxa=taxonomy_info.split(', ')
-	hit_dict=dict(zip(ranks, taxa+['NA']*(len(ranks)-len(taxa))))
+def process_virus_hits(hit):
+		root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(tax_id)
+	return {
+		'Root': root,
+		'Cellular Organisms': cellular_organisms,
+		'Superkingdom': superkingdom,
+		'Phylum': phylum,
+		'Class': class_,
+		'Superfamily': superfamily,
+		'Family': family,
+		'Genus': genus,
+		'Species': species
+	}
 
 	if hit_dict['Superkingdom']=="Viruses":
 		hit_dict['Count']=1
@@ -114,6 +137,7 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 
 
 	output_data=[]
+	hits_summary=[]
 
 	for query, data in query_hits.items():
 		hits=data["hits"]
@@ -195,7 +219,7 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 		taxonomy_info=row['LCA Taxonomy Info (Root, Cellular Organisms, Superkingdom, Phylum, Class, Superfamily, Family, Genus, Species)']
 
 		for hit in hits:
-			hit_dict=process_hits(hit, taxonomy_info)
+			hit_dict=process_hits(hit)
 			hit_dict['Count']=1
 			hits_summary.append(hit_dict)
 
@@ -210,7 +234,7 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 		taxonomy_info=row['LCA Taxonomy Info (Root, Cellular Organisms, Superkingdom, Phylum, Class, Superfamily, Family, Genus, Species)']
 
 		for hit in hits:
-			virus_hit_dict=process_virus_hits(hit, taxonomy_info)
+			virus_hit_dict=process_virus_hits(hit)
 			if virus_hit_dict:
 				virus_hits_summary.append(virus_hit_dict)
 
