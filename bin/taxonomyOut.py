@@ -63,7 +63,7 @@ def translate_taxid(taxid):
 		print(f"Error translating taxid {taxid}: {e}")
 		return "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"
 
-def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_summary, output_virus_summary):
+def main(diamond_out, magnitudes, output_table, output_lca_summary, output_virus_summary):
 	df=pd.read_csv(diamond_out, sep='\t', header=None)
 	magnitudes_df=pd.read_csv(magnitudes, sep='\t', header=None, names=['Query', 'Coverage'])
 
