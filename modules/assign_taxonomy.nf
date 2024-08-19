@@ -38,14 +38,13 @@ process TAXONOMY {
     output:
     tuple val(sample_id), path("${sample_id}_table.csv"), emit: table
     tuple val(sample_id), path("${sample_id}_lca_summary.csv"), emit: lca_summary
-    tuple val(sample_id), path("${sample_id}_hits_summary.csv"), emit: hits_summary
-    tuple val(sample_id), path("${sample_id}_virus_hits_summary.csv"), optional: true, emit: virus_hits_summary
+    tuple val(sample_id), path("${sample_id}_virus_summary.csv"), optional: true, emit: virus_summary
 
     
     script:
 
     """
-    taxonomyOut.py -i ${diamond_out} -m ${magnitudes} -o ${sample_id}_table.csv -l ${sample_id}_lca_summary.csv -s ${sample_id}_hits_summary.csv -v ${sample_id}_virus_hits_summary.csv
+    taxonomyOut.py -i ${diamond_out} -m ${magnitudes} -o ${sample_id}_table.csv -l ${sample_id}_lca_summary.csv -v ${sample_id}_virus_summary.csv
 
     """
 }
