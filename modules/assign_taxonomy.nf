@@ -25,7 +25,7 @@ process DIAMOND {
 
 
 /*
- * Obtain lowest common ancestor from blast hits and taxonomy information for hits and LCAs
+ * Obtain lowest common ancestor from blast hits and taxonomy information for LCAs
  */ 
 
 process TAXONOMY {
