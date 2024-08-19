@@ -63,52 +63,11 @@ def translate_taxid(taxid):
 		print(f"Error translating taxid {taxid}: {e}")
 		return "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"
 
-def parse_tax_info(taxonomy_info):
-	ranks=['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']
-	taxa=taxonomy_info.split(', ')
-	return dict(zip(ranks, taxa))
-
-def process_hits(hit):
-	root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(hit)
-	return {
-		'Root': root,
-		'Cellular Organisms': cellular_organisms,
-		'Superkingdom': superkingdom,
-		'Phylum': phylum,
-		'Class': class_,
-		'Superfamily': superfamily,
-		'Family': family,
-		'Genus': genus,
-		'Species': species
-	}
-
-def process_virus_hits(hit):
-	root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(hit)
-	hit_dict= {
-		'Root': root,
-		'Cellular Organisms': cellular_organisms,
-		'Superkingdom': superkingdom,
-		'Phylum': phylum,
-		'Class': class_,
-		'Superfamily': superfamily,
-		'Family': family,
-		'Genus': genus,
-		'Species': species
-	}
-
-	if superkingdom=="Viruses":
-		hit_dict['Count']=1
-		return hit_dict
-	else:
-		return None
-
-
 def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_summary, output_virus_summary):
 	df=pd.read_csv(diamond_out, sep='\t', header=None)
 	magnitudes_df=pd.read_csv(magnitudes, sep='\t', header=None, names=['Query', 'Coverage'])
 
 	query_hits={}
-
 
 	for _, row in df.iterrows():
 		query=row[0]
@@ -136,8 +95,9 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 				print(f"Invalid taxonomy ID: {hit_taxid}")
 
 
-	output_data=[]
-	hits_summary=[]
+	output_summary=[]
+	lca_summary=[]
+	virus_summary=[]
 
 	for query, data in query_hits.items():
 		hits=data["hits"]
@@ -150,7 +110,7 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 
 		lca = get_lca(tax_ids)
 
-		if lca is not None:
+		if lca:
 			try:
 
 				lca_name=ncbi.get_taxid_translator([lca]).get(lca)
@@ -158,7 +118,23 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 				root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(lca)
 				taxonomy_info=', '.join([root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species])
 
-		
+				lca_info={
+					'Root': root,
+					'Cellular Organisms': cellular_organisms,
+					'Superkingdom': superkingdom,
+					'Phylum': phylum,
+					'Class': class_,
+					'Superfamily': superfamily,
+					'Family': family,
+					'Genus': genus,
+					'Species': species,
+					'Count': 1
+				}
+				lca_summary.append(lca_info)
+
+				if superkingdom=="Viruses":
+					virus_summary.append(lca_info)
+
 				avg_percents=round(sum(percent_ids)/len(percent_ids), 2) if percent_ids else 0
 				avg_lengths=round(sum(lengths)/len(lengths), 2) if lengths else 0
 				avg_mismatches=round(sum(mismatches)/len(mismatches), 2) if mismatches else 0
@@ -166,30 +142,26 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 				avg_bitscores=round(sum(bitscores)/len(bitscores), 2) if bitscores else 0
 
 
-				output=[
-					query,
-					', '.join(hits),
-					', '.join(tax_ids),
-					lca_name_id,
-					taxonomy_info,
-					avg_percents,
-					avg_lengths,
-					avg_mismatches,
-					avg_evalues,
-					avg_bitscores
-				]
-				output_data.append(output)
+				output_summary.append({
+					'Query': query,
+					'Hits': ', '.join(hits),
+					'Hit TaxIDs': ', '.join(tax_ids),
+					'LCA': lca_name_id,
+					'LCA Tax Info': taxonomy_info,
+					'Av % Identity': avg_percents,
+					'Av Align Lengths': avg_lengths,
+					'Av Mismatches': avg_mismatches,
+					'Av e-value': avg_evalues,
+					'Av Bit Score': avg_bitscores
+				})
+				
+				
 			except Exception as e:
 				print(f"Error processing LCA {lca} for query {query}: {e}")
 		else:
 			print(f"No LCA found for query {query}")
-
-		for tax_id in data["tax_ids"]:
-			root, cellular_organisms, superkingdom, phylum, class_, superfamily, family, genus, species=translate_taxid(tax_id)
 		
-
-	output_df=pd.DataFrame(output_data, columns=["Query", "Hits", "Hit TaxIDs", "LCA", "LCA Taxonomy Info (Root, Cellular Organisms, Superkingdom, Phylum, Class, Superfamily, Family, Genus, Species)", "Av % Identity", "Av Align Length", "Av Mismatches", 
-		"Av e-value", "Av Bit Score"])
+	output_df=pd.DataFrame(output_summary)
 
 	output_df['Query']=output_df['Query'].astype(str)
 	magnitudes_df['Query']=magnitudes_df['Query'].astype(str)
@@ -197,56 +169,20 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_hits_
 	magnitudes_df['Query']=magnitudes_df['Query'].str.strip().str.upper()
 
 	merged_output_df=pd.merge(output_df, magnitudes_df, on='Query', how='inner')
-	merged_output_df.to_csv(output_table, index=False)
-
-
-	lca_summary=[]
-
-	for _, row in output_df.iterrows():
-		taxonomy_dict=parse_tax_info(row['LCA Taxonomy Info (Root, Cellular Organisms, Superkingdom, Phylum, Class, Superfamily, Family, Genus, Species)'])
-		taxonomy_dict['Count']=1
-		lca_summary.append(taxonomy_dict)
+	merged_output_df.to_csv(output_table, sep=',', index=False)
 
 	lca_summary_df=pd.DataFrame(lca_summary)
 	lca_summary_df=lca_summary_df.groupby(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']).sum().reset_index()
 	lca_summary_df=lca_summary_df.sort_values(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species'])
-	lca_summary_df.to_csv(output_lca_summary, sep='\t', index=False)
+	lca_summary_df.to_csv(output_lca_summary, sep=',', index=False)
 
-
-	hits_summary=[]
-	for _, row in output_df.iterrows():
-		hits=row['Hits'].split(', ')
-		taxonomy_info=row['LCA Taxonomy Info (Root, Cellular Organisms, Superkingdom, Phylum, Class, Superfamily, Family, Genus, Species)']
-
-		for hit in hits:
-			hit_dict=process_hits(hit)
-			hit_dict['Count']=1
-			hits_summary.append(hit_dict)
-
-	hits_summary_df=pd.DataFrame(hits_summary)
-	hits_summary_df=hits_summary_df.groupby(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']).sum().reset_index()
-	hits_summary_df=hits_summary_df.sort_values(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species'])
-	hits_summary_df.to_csv(output_hits_summary, sep='\t', index=False)
-
-	virus_hits_summary=[]
-	for _, row in output_df.iterrows():
-		hits=row['Hits'].split(', ')
-		taxonomy_info=row['LCA Taxonomy Info (Root, Cellular Organisms, Superkingdom, Phylum, Class, Superfamily, Family, Genus, Species)']
-
-		for hit in hits:
-			virus_hit_dict=process_virus_hits(hit)
-			if virus_hit_dict:
-				virus_hits_summary.append(virus_hit_dict)
-
-	virus_hits_summary_df=pd.DataFrame(virus_hits_summary)
-
-	if not virus_hits_summary_df.empty:
-		virus_hits_summary_df=virus_hits_summary_df.groupby(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']).sum().reset_index()
-		virus_hits_summary_df=virus_hits_summary_df.sort_values(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species'])
-		virus_hits_summary_df.to_csv(output_virus_summary, sep='\t', index=False)
+	if virus_summary:
+		virus_summary_df=pd.DataFrame(virus_summary)
+		virus_summary_df=virus_summary_df.groupby(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']).sum().reset_index()
+		virus_summary_df=virus_summary_df.sort_values(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species'])
+		virus_summary_df.to_csv(output_virus_summary, sep=',', index=False)
 	else:
-		print("No virus hits found")
-
+		print("No virus LCAs found")
 
 if __name__ == "__main__":
 	parser=argparse.ArgumentParser()
@@ -254,7 +190,6 @@ if __name__ == "__main__":
 	parser.add_argument('-m', '--magnitudes', type=str, required=True)
 	parser.add_argument('-o', '--output', type=str, required=True)
 	parser.add_argument('-l', '--lca', type=str, required=True)
-	parser.add_argument('-s', '--hits', type=str, required=True)
 	parser.add_argument('-v', '--virus', type=str, required=True)
 
 	args=parser.parse_args()
