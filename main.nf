@@ -19,6 +19,7 @@ adapter sequences for trimming   : ${params.adapt}
 include { MERGE; TRIM } from './modules/preprocessing_reads'
 include { ASSEMBLE; CIRCULAR; ALIGN; SAMTOOLS } from './modules/assembly'
 include { DIAMOND; TAXONOMY } from './modules/assign_taxonomy'
+include { SUMMARY; VIRUSES } from './modules/summary_results'
 
 
 workflow {
@@ -37,6 +38,11 @@ workflow {
     taxonomy_input_ch = DIAMOND.out.join(SAMTOOLS.out.magnitudes, by: 0)
         .map { sample_id, diamond_out, magnitudes -> tuple(sample_id, diamond_out, magnitudes) }
     TAXONOMY( taxonomy_input_ch )
+
+    TAXONOMY.out.lca_summary.collect().map { it -> true }.last().set { taxonomy_complete }
+    lca_summaries_ch = Channel.fromPath("${params.outdir}/taxonomy/*_lca_summary.csv")
+    SUMMARY( lca_summaries_ch.collect(), taxonomy_complete )
+    VIRUSES(SUMMARY.out)
     
 }
 
