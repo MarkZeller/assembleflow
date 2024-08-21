@@ -49,7 +49,7 @@ process CIRCULAR {
  */
 
 process ALIGN {
-    publishDir "${params.outdir}/alignments/", mode: 'copy'
+    //publishDir "${params.outdir}/alignments/", mode: 'copy'
 
     container 'staphb/bwa'
     tag { sample_id }
