@@ -30,11 +30,11 @@ for i, file_path in enumerate(args.files):
 
 
 # Add a 'Total Count' column by summing across all samples
-merged_df['Total Count'] = merged_df.filter(like='Sample').sum(axis=1)
+merged_df['Total'] = merged_df.filter(like='Sample').sum(axis=1)
 
 sample_columns=merged_df.filter(like='Sample').columns
 merged_df[sample_columns]=merged_df[sample_columns].fillna(0).astype(int)
-merged_df['Total Count'] = merged_df['Total Count'].astype(int)
+merged_df['Total'] = merged_df['Total'].astype(int)
 
 for col in ['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']:
     merged_df[col] = merged_df[col].fillna("NA")
