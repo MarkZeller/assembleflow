@@ -32,7 +32,7 @@ for i, file_path in enumerate(args.files):
 # Add a 'Total Count' column by summing across all samples
 merged_df['Total'] = merged_df.filter(like='Sample').sum(axis=1)
 
-sample_columns=merged_df.filter(like='Sample').columns
+sample_columns = [col for col in merged_df.columns if col != 'Root' and col != 'Cellular Organisms' and col != 'Superkingdom' and col != 'Phylum' and col != 'Class' and col != 'Superfamily' and col != 'Family' and col != 'Genus' and col != 'Species' and col != 'Total Count']
 merged_df[sample_columns]=merged_df[sample_columns].fillna(0).astype(int)
 merged_df['Total'] = merged_df['Total'].astype(int)
 
