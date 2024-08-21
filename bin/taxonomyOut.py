@@ -63,7 +63,7 @@ def translate_taxid(taxid):
 		print(f"Error translating taxid {taxid}: {e}")
 		return "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"
 
-def main(diamond_out, magnitudes, output_table, output_lca_summary, output_virus_summary):
+def main(diamond_out, magnitudes, output_table, output_lca_summary):
 	df=pd.read_csv(diamond_out, sep='\t', header=None)
 	magnitudes_df=pd.read_csv(magnitudes, sep='\t', header=None, names=['Query', 'Coverage'])
 
@@ -97,7 +97,6 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_virus
 
 	output_summary=[]
 	lca_summary=[]
-	virus_summary=[]
 
 	for query, data in query_hits.items():
 		hits=data["hits"]
@@ -131,9 +130,6 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_virus
 					'Count': 1
 				}
 				lca_summary.append(lca_info)
-
-				if superkingdom=="Viruses":
-					virus_summary.append(lca_info)
 
 				avg_percents=round(sum(percent_ids)/len(percent_ids), 2) if percent_ids else 0
 				avg_lengths=round(sum(lengths)/len(lengths), 2) if lengths else 0
@@ -169,20 +165,14 @@ def main(diamond_out, magnitudes, output_table, output_lca_summary, output_virus
 	magnitudes_df['Query']=magnitudes_df['Query'].str.strip().str.upper()
 
 	merged_output_df=pd.merge(output_df, magnitudes_df, on='Query', how='inner')
-	merged_output_df.to_csv(output_table, sep=',', index=False)
+	merged_output_df.to_csv(output_table, index=False)
 
 	lca_summary_df=pd.DataFrame(lca_summary)
 	lca_summary_df=lca_summary_df.groupby(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']).sum().reset_index()
 	lca_summary_df=lca_summary_df.sort_values(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species'])
-	lca_summary_df.to_csv(output_lca_summary, sep=',', index=False)
+	lca_summary_df.to_csv(output_lca_summary, index=False)
 
-	if virus_summary:
-		virus_summary_df=pd.DataFrame(virus_summary)
-		virus_summary_df=virus_summary_df.groupby(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species']).sum().reset_index()
-		virus_summary_df=virus_summary_df.sort_values(['Root', 'Cellular Organisms', 'Superkingdom', 'Phylum', 'Class', 'Superfamily', 'Family', 'Genus', 'Species'])
-		virus_summary_df.to_csv(output_virus_summary, sep=',', index=False)
-	else:
-		print("No virus LCAs found")
+	
 
 if __name__ == "__main__":
 	parser=argparse.ArgumentParser()
@@ -190,9 +180,8 @@ if __name__ == "__main__":
 	parser.add_argument('-m', '--magnitudes', type=str, required=True)
 	parser.add_argument('-o', '--output', type=str, required=True)
 	parser.add_argument('-l', '--lca', type=str, required=True)
-	parser.add_argument('-v', '--virus', type=str, required=True)
 
 	args=parser.parse_args()
 
-	main(args.input, args.magnitudes, args.output, args.lca, args.hits, args.virus)
+	main(args.input, args.magnitudes, args.output, args.lca, args.hits)
 
