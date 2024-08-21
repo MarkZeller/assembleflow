@@ -183,5 +183,5 @@ if __name__ == "__main__":
 
 	args=parser.parse_args()
 
-	main(args.input, args.magnitudes, args.output, args.lca, args.hits)
+	main(args.input, args.magnitudes, args.output, args.lca)
 
