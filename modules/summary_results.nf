@@ -6,6 +6,7 @@
     tag { sample_id }
 
     input:
+    val sample_ids
     path lca_summary_files
     val taxonomy_complete
 
@@ -15,7 +16,7 @@
     script:
 
     """
-    mergeLCAs.py --output merged_lca_summary.csv ${lca_summary_files.join(' ')}
+    mergeLCAs.py --output merged_lca_summary.csv ${sample_ids.join(' ')} ${lca_summary_files.join(' ')}
 
     """
 
