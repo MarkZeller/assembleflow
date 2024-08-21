@@ -1,5 +1,5 @@
 /*
- * Merge LCA summary tables to produce single output table that includes all samples, then subset this to produce a separate table that is virus-specific
+ * Merge LCA summary tables to produce single output table that includes all samples
  */
  process SUMMARY {
     publishDir "${params.outdir}/summaries", mode: 'copy', pattern: "*.csv"
