@@ -41,7 +41,8 @@ workflow {
 
     TAXONOMY.out.lca_summary.collect().map { it -> true }.last().set { taxonomy_complete }
     lca_summaries_ch = Channel.fromPath("${params.outdir}/taxonomy/*_lca_summary.csv")
-    SUMMARY( lca_summaries_ch.collect(), taxonomy_complete )
+    sample_ids_ch = lca_summaries_ch.map { file -> file.baseName.replaceAll('_lca_summary', '') }
+    SUMMARY( sample_ids_ch.collect(), lca_summaries_ch.collect(), taxonomy_complete )
     VIRUSES(SUMMARY.out)
     
 }
