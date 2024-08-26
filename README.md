@@ -10,9 +10,8 @@ Assembleflow is a metagenomics sequencing assembly pipeline for Illumina paired-
 * [Running Workflow](#running)
 
 ### Requirements
-* Linux or MacOS
-* Diamond
-* KronaTools
+* Conda
+* Docker
 
 ## Installing
 Assembleflow requires a Diamond database. Run the following script to build a protein refseq Diamond database:
@@ -22,7 +21,7 @@ bash ./bin/download_and_build_diamond_db_with_taxonomy.sh
 
 ### Contents
 
-The entire workflow has been implemented in NextFlow. An overview of each step in assembleflow:
+The entire workflow has been implemented in NextFlow. An overview of each step in Assembleflow:
 
 * Preprocessing reads
 	+ Deduplicating reads
@@ -38,12 +37,12 @@ The entire workflow has been implemented in NextFlow. An overview of each step i
 
 
 ### Usage
-Assembleflow uses the `nextflow.config` file to provide parameters to the pipeline. To run the pipeline simply upodate the `nextflow.config` file:
+Assembleflow uses the `nextflow.config` file to provide parameters to the pipeline. To run the pipeline simply update the `nextflow.config` file:
 Areas to configure: 
-* reads: folder containing the paired-end reads
-* adapt: location of the file that contains the adapter sequences in fasta format
-* db: location of the database used by Diamond
-* scaf_len: contig length filter (reads below this length will be ignored when assigning taxonomy)
+* reads: folder containing paired-end sequence reads
+* adapt: location of the file that contains the adapter sequences in fasta format (./bin/adapter_sequences.fasta)
+* db: location of the Diamond database
+* scaf_len: contig length filter (contigs below this length will be ignored when assigning taxonomy).
 * outdir: output directory
 
 
