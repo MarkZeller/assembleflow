@@ -8,6 +8,7 @@ DIAMOND_DB_NAME="refseq_protein_diamond"
 TAXONMAP_FILE="prot.accession2taxid.FULL.gz"
 TAXONNODES_FILE="nodes.dmp"
 TAXONNAMES_FILE="names.dmp"
+THREADS="20"
 
 # Create a directory for the database
 mkdir -p "$REFSEQ_DB_DIR"
@@ -83,7 +84,7 @@ fi
 
 # Build the DIAMOND database with taxonomy information
 echo "Building DIAMOND database with taxonomy..."
-diamond makedb --in "$FASTA_FILE" -d "$DIAMOND_DB_NAME" --taxonmap "$REFSEQ_DB_DIR/$TAXONMAP_FILE" --taxonnodes "$REFSEQ_DB_DIR/$TAXONNODES_FILE" --taxonnames "$REFSEQ_DB_DIR/$TAXONNAMES_FILE"
+diamond makedb --in "$FASTA_FILE" -d "$DIAMOND_DB_NAME" --taxonmap "$REFSEQ_DB_DIR/$TAXONMAP_FILE" --taxonnodes "$REFSEQ_DB_DIR/$TAXONNODES_FILE" --taxonnames "$REFSEQ_DB_DIR/$TAXONNAMES_FILE" --threads "$THREADS"
 
 # Check if DIAMOND database build was successful
 if [ $? -ne 0 ]; then
