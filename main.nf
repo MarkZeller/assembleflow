@@ -39,10 +39,9 @@ workflow {
         .map { sample_id, diamond_out, magnitudes -> tuple(sample_id, diamond_out, magnitudes) }
     TAXONOMY( taxonomy_input_ch )
 
-    TAXONOMY.out.lca_summary.collect().map { it -> true }.last().set { taxonomy_complete }
-    lca_summaries_ch = Channel.fromPath("${params.outdir}/taxonomy/*_lca_summary.csv")
-    sample_ids_ch = lca_summaries_ch.map { file -> file.baseName.replaceAll('_lca_summary', '') }
-    SUMMARY( sample_ids_ch.collect(), lca_summaries_ch.collect(), taxonomy_complete )
+    TAXONOMY.out.lca_summary.collect().set { all_lca_summaries }
+    lca_summary_dir = "${params.outdir}/taxonomy"
+    SUMMARY( lca_summary_dir )
     VIRUSES(SUMMARY.out)
     
 }
