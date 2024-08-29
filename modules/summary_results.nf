@@ -3,12 +3,9 @@
  */
  process SUMMARY {
     publishDir "${params.outdir}/summaries", mode: 'copy', pattern: "*.csv"
-    tag { sample_id }
 
     input:
-    val sample_ids
-    path lca_summary_files
-    val taxonomy_complete
+    path(lca_summary_dir)
 
     output:
     path 'merged_lca_summary.csv'
@@ -16,7 +13,7 @@
     script:
 
     """
-    mergeLCAs.py --output merged_lca_summary.csv ${sample_ids.join(' ')} ${lca_summary_files.join(' ')}
+    mergeLCAs.py --output merged_lca_summary.csv
 
     """
 
