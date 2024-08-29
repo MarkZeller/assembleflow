@@ -43,7 +43,7 @@ process TAXONOMY {
     script:
 
     """
-    taxonomyOut.py -i ${diamond_out} -m ${magnitudes} -o ${sample_id}_table.csv -l ${sample_id}_lca_summary.csv 
+    taxonomyOut.py -i ${diamond_out} -m ${magnitudes} -o ${sample_id}_table.csv -l ${sample_id}_lca_summary.csv -v ${sample_id}_virus_summary.csv
 
     """
 }
