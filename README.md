@@ -1,51 +1,54 @@
 # Assembleflow
 
-Assembleflow is a metagenomics sequencing assembly pipeline for Illumina paired-end reads. It will assemble reads into contigs and assigns a taxonomic rank to each contig. 
+Assembleflow is a metagenomic sequencing assembly pipeline for Illumina paired-end reads. It assembles reads into contigs and assigns a taxonomic rank to each contig. The pipeline is implemented in Nextflow and is designed for high-throughput analysis.
 
-## Table of Contents
-* [Requirements](#requirements)
-* [Installing](#installing)
-* [Contents](#contents)
-* [Usage](#usage)
-* [Running Workflow](#running)
+## Requirements
+- Conda
+- Nextflow
 
-### Requirements
-* Conda
-* Docker
+## Installation
 
-## Installing
-Assembleflow requires a Diamond database. Run the following script to build a protein refseq Diamond database:
+Before running Assembleflow, you need to build a DIAMOND database for taxonomic assignment. You can do this by running the following script:
+
 ```sh
-bash ./bin/download_and_build_diamond_db_with_taxonomy.sh
+bash build_diamond_db.sh
 ```
+**Note**: The DIAMOND database requires hundreds of gigabytes of disk space. Make sure you have sufficient storage before proceeding.
 
-### Contents
+## Pipeline Overview
 
-The entire workflow has been implemented in NextFlow. An overview of each step in Assembleflow:
+Assembleflow consists of the following steps:
 
-* Preprocessing reads
-	+ Deduplicating reads
-	+ Merging overlapping read pairs
-	+ Adapter trimming
-* Assembly
-	+ Assemble reads into contigs
-	+ Align reads back to contigs
-	+ Find circular contigs
-* Assign taxonomy
-	+ Assign taxonomy to contigs
-	+ Summarize taxonomy for each taxonomic rank
+1. **Preprocessing Reads**
+   - Merging overlapping read pairs
+   - Adapter trimming
 
+2. **Assembly**
+   - Assemble reads into contigs
+   - Align reads back to contigs
+   - Detect circular contigs
 
-### Usage
-Assembleflow uses the `nextflow.config` file to provide parameters to the pipeline. To run the pipeline simply update the `nextflow.config` file:
-Areas to configure: 
-* reads: folder containing paired-end sequence reads
-* adapt: location of the file that contains the adapter sequences in fasta format (./bin/adapter_sequences.fasta)
-* db: location of the Diamond database
-* scaf_len: contig length filter (contigs below this length will be ignored when assigning taxonomy).
-* outdir: output directory
+3. **Taxonomic Assignment**
+   - Assign taxonomy using DIAMOND
+   - Retrieve taxonomic lineage information
 
+## Configuration & Usage
 
-### Running
-Once your workflow.sh has been configured you can start the workflow by simply running:
-`nextflow run main.nf`
+You need to update the `nextflow.config` file before running Assembleflow.
+
+### Key Parameters
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `reads`   | Folder containing paired-end sequence reads | `./test/*{R1,R2}.fastq.gz` |
+| `adapt`   | File containing adapter sequences (FASTA format) | `./bin/adapter_sequences.fasta` |
+| `db`      | Path to the DIAMOND database | `./refseq_protein_db/refseq_protein_diamond.dmnd` |
+| `outdir`  | Output directory for results | `./test/results/` |
+
+## Running the Pipeline
+
+Once your `nextflow.config` file is properly set up, run the pipeline with:
+
+```sh
+nextflow run main.nf
+```
