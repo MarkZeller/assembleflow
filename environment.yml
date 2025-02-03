@@ -1,0 +1,13 @@
+name: assembleflow
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python==3.10
+  - fastp==0.24.0
+  - flash2==2.2.00
+  - spades==4.0.0
+  - bwa==0.7.18
+  - samtools==1.21
+  - diamond==2.1.10
+  - ete3
